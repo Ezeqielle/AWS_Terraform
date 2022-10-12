@@ -8,10 +8,16 @@ module "ec2_instance" {
 
 module "s3_bucket" {
   source                        = "./s3_bucket"
-  bucket_name                   = "ezeqielle-bucket"
+  bucket_name                   = "ezeqielle"
   very_secret_access_key_id     = module.iam.access_key_id
   very_secret_access_key_secret = module.iam.access_key_secret
   very_secret_username          = module.iam.username
+}
+
+module "flowlog" {
+  source      = "./flowlog"
+  bucket_name = module.s3_bucket.s3_bucket_arn
+  vpc         = module.network.vpc_id
 }
 
 module "iam" {

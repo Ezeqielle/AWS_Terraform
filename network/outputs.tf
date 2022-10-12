@@ -5,3 +5,7 @@ output "new_subnet_id" {
 output "security_group_id" {
   value = aws_security_group.allowed_in_out.id
 }
+
+output "vpc_id" {
+  value = aws_vpc.new_vpc.id
+}
