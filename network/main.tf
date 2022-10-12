@@ -1,9 +1,9 @@
 resource "aws_vpc" "new_vpc" {
-  cidr_block       = "10.16.0.0/16"
+  cidr_block       = var.vpc_cidr
   instance_tenancy = "default"
 
   tags = {
-    Name = "main-network"
+    Name = "vpc_${var.network_name}"
   }
 }
 
@@ -18,17 +18,17 @@ resource "aws_route_table" "public_route_table" {
     gateway_id = aws_internet_gateway.new_gateway.id
   }
   tags = {
-    Name = "Public Route Table"
+    Name = "rt_${var.network_name}"
   }
 }
 
 resource "aws_subnet" "new_subnet" {
   vpc_id            = aws_vpc.new_vpc.id
-  cidr_block        = "10.16.16.0/24"
+  cidr_block        = var.subnet_cidr
   availability_zone = "eu-west-3a"
 
   tags = {
-    Name = "main-network"
+    Name = "subnet_${var.network_name}"
   }
 }
 
@@ -40,51 +40,33 @@ resource "aws_route_table_association" "rt_association" {
 
 
 resource "aws_security_group" "allowed_in_out" {
-  name        = "allowed_in_out"
+  name        = "sg_${var.network_name}"
   description = "Allowed inbound/outbound traffic"
   vpc_id      = aws_vpc.new_vpc.id
 
-  ingress {
-    description = "SSH to VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["94.228.190.38/32"]
+  dynamic "ingress" {
+    for_each = var.vpc_security_group_ingress
+    content {
+      description = ingress.value["description"]
+      from_port   = ingress.value["from_port"]
+      to_port     = ingress.value["to_port"]
+      protocol    = ingress.value["protocol"]
+      cidr_blocks = ingress.value["cidr_blocks"]
+    }
   }
 
-  ingress {
-    description = "HTTP to VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["94.228.190.38/32"]
-  }
-
-  ingress {
-    description = "TLS to VPC"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["94.228.190.38/32"]
-  }
-
-  egress {
-    description = "TLS from VPC"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "HTTP from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "egress" {
+    for_each = var.vpc_security_group_egress
+    content {
+      description = egress.value["description"]
+      from_port   = egress.value["from_port"]
+      to_port     = egress.value["to_port"]
+      protocol    = egress.value["protocol"]
+      cidr_blocks = egress.value["cidr_blocks"]
+    }
   }
 
   tags = {
-    Name = "allowed_in_out"
+    Name = "sg_${var.network_name}"
   }
 }

@@ -1,4 +1,4 @@
-resource "aws_iam_role" "kungfu_role" {
+resource "aws_iam_role" "new_role" {
   name = "tf-${var.instance_name}-role"
 
   assume_role_policy = jsonencode({
@@ -16,9 +16,9 @@ resource "aws_iam_role" "kungfu_role" {
   })
 }
 
-resource "aws_iam_role_policy" "kungfu_role_policy" {
+resource "aws_iam_role_policy" "new_role_policy" {
   name = "tf-${var.instance_name}-policy"
-  role = aws_iam_role.kungfu_role.id
+  role = aws_iam_role.new_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
